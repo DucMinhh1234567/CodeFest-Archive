@@ -160,15 +160,7 @@ class ChestBreakerListener implements Emitter.Listener {
         }
         return nearestChest;
     }
-
-    // Kiểm tra rương có nằm trong bo không
-    private boolean isChestInSafeZone(Obstacle chest, Player player) {
-        GameMap gameMap = hero.getGameMap();
-        int safeZone = gameMap.getSafeZone();
-        int mapSize = gameMap.getMapSize();
-        return PathUtils.checkInsideSafeArea(chest, safeZone, mapSize);
-    }
-
+    
     private boolean isChestStillExists(GameMap gameMap, Obstacle chest) {
         // Kiểm tra xem rương có còn tồn tại và còn máu không
         Element element = gameMap.getElementByIndex(chest.getX(), chest.getY());
@@ -180,6 +172,15 @@ class ChestBreakerListener implements Emitter.Listener {
         return false;
     }
 
+    // Kiểm tra rương có nằm trong bo không
+    private boolean isChestInSafeZone(Obstacle chest, Player player) {
+        GameMap gameMap = hero.getGameMap();
+        int safeZone = gameMap.getSafeZone();
+        int mapSize = gameMap.getMapSize();
+        return PathUtils.checkInsideSafeArea(chest, safeZone, mapSize);
+    }
+
+    // Global Functions
     private List<Node> getNodesToAvoid(GameMap gameMap) {
         List<Node> nodes = new ArrayList<>(gameMap.getListIndestructibles());
         nodes.removeAll(gameMap.getObstaclesByTag("CAN_GO_THROUGH"));
