@@ -119,7 +119,18 @@ class EnemyHunterListener implements Emitter.Listener {
     private void handleCurrentEnemyTracking(Player player, List<Node> nodesToAvoid) throws IOException {
         if (currentTargetEnemy == null) return;
 
-        // Kiểm tra khoảng cách với kẻ địch hiện tại
+        // Cập nhật vị trí mới
+        Player updatedEnemy = getUpdatedEnemyPosition(currentTargetEnemy);
+        if (updatedEnemy == null) {
+            System.out.println("Kẻ địch không còn tồn tại, tìm kẻ địch khác...");
+            currentTargetEnemy = null;
+            return;
+        }
+        
+        // Cập nhật vị trí mới của kẻ địch
+        currentTargetEnemy = updatedEnemy;
+
+        // Kiểm tra khoảng cách với kẻ địch hiện tại (vị trí mới)
         int distanceToEnemy = PathUtils.distance(player, currentTargetEnemy);
 
         if (distanceToEnemy <= 1) {
@@ -127,16 +138,29 @@ class EnemyHunterListener implements Emitter.Listener {
             System.out.println("Đã đến cạnh kẻ địch! Khoảng cách: " + distanceToEnemy);
             // Có thể thêm logic tấn công ở đây
         } else {
-            // Vẫn đang theo dõi kẻ địch, tiếp tục di chuyển
+            // Vẫn đang theo dõi kẻ địch, tiếp tục di chuyển đến vị trí mới
             String pathToEnemy = PathUtils.getShortestPath(hero.getGameMap(), nodesToAvoid, player, currentTargetEnemy, true);
             if (pathToEnemy != null && !pathToEnemy.isEmpty()) {
-                System.out.println("Tiếp tục theo dõi kẻ địch: " + pathToEnemy);
+                System.out.println("Tiếp tục theo dõi kẻ địch tại vị trí mới (" + currentTargetEnemy.getX() + ", " + currentTargetEnemy.getY() + "): " + pathToEnemy);
                 hero.move(pathToEnemy);
             } else {
                 System.out.println("Mất dấu kẻ địch, tìm kẻ địch khác...");
                 currentTargetEnemy = null;
             }
         }
+    }
+
+    // Hàm mới để lấy vị trí cập nhật của kẻ địch từ server
+    private Player getUpdatedEnemyPosition(Player oldEnemy) {
+        GameMap gameMap = hero.getGameMap();
+        List<Player> currentEnemies = gameMap.getOtherPlayerInfo();
+        
+        for (Player currentEnemy : currentEnemies) {
+            if (currentEnemy.getID().equals(oldEnemy.getID()) && currentEnemy.getHealth() > 0) {
+                return currentEnemy; // Trả về kẻ địch với vị trí mới nhất
+            }
+        }
+        return null; // Kẻ địch không còn tồn tại hoặc đã chết
     }
 
     private Player findNearestEnemy(List<Player> enemies, Player player) {
