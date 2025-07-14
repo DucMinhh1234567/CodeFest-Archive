@@ -15,10 +15,10 @@ import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.Map;
 
-public class throwabl1 {
+public class UseThrowable {
     private static final String SERVER_URL = "https://cf25-server.jsclub.dev";
-    private static final String GAME_ID = "199086"; // Nhập Game ID vào đây
-    private static final String PLAYER_NAME = "throwabl1"; // Tên bot
+    private static final String GAME_ID = "191106"; // Nhập Game ID vào đây
+    private static final String PLAYER_NAME = "UseThrowable"; // Tên bot
     private static final String SECRET_KEY = "sk-H__B6olPTeelwSs3R46pmQ:fHUi994TZvUp1hE6v4J-6tL3oRiTyKirLStD1yjP2jW717K3lk3qNujJIFwEGK8rguQS5sCVPFykXuHtdmD3Tg"; // Nhập Secret Key vào đây
 
     public static void main(String[] args) throws IOException {
@@ -33,7 +33,6 @@ public class throwabl1 {
 class SmartBotListener implements Emitter.Listener {
     private final Hero hero;
     private Player currentTargetEnemy = null;
-    private Element currentTargetItem = null;
 
     public SmartBotListener(Hero hero) {
         this.hero = hero;
@@ -80,7 +79,6 @@ class SmartBotListener implements Emitter.Listener {
         if (nearestItem == null) {
             return false;
         }
-        currentTargetItem = nearestItem;
         System.out.println("Tìm thấy item chưa có gần nhất tại (" + nearestItem.getX() + ", " + nearestItem.getY() + ")");
         String pathToItem = PathUtils.getShortestPath(gameMap, nodesToAvoid, player, nearestItem, true);
         if (pathToItem != null) {
@@ -93,7 +91,6 @@ class SmartBotListener implements Emitter.Listener {
             return true;
         } else {
             System.out.println("Không tìm thấy đường đi đến item!");
-            currentTargetItem = null;
             return false;
         }
     }
@@ -153,14 +150,14 @@ class SmartBotListener implements Emitter.Listener {
 
     private Set<String> getMissingItemTypes() {
         Set<String> missingTypes = new HashSet<>();
-        if (hero.getInventory().getGun() == null) missingTypes.add("GUN");
-        Weapon meleeWeapon = hero.getInventory().getMelee();
-        if (meleeWeapon == null || "HAND".equals(meleeWeapon.getId())) missingTypes.add("MELEE");
+//        if (hero.getInventory().getGun() == null) missingTypes.add("GUN");
+//        Weapon meleeWeapon = hero.getInventory().getMelee();
+//        if (meleeWeapon == null || "HAND".equals(meleeWeapon.getId())) missingTypes.add("MELEE");
         if (hero.getInventory().getThrowable() == null) missingTypes.add("THROWABLE");
-        if (hero.getInventory().getSpecial() == null) missingTypes.add("SPECIAL");
-        if (hero.getInventory().getArmor() == null) missingTypes.add("ARMOR");
-        if (hero.getInventory().getHelmet() == null) missingTypes.add("HELMET");
-        if (hero.getInventory().getListSupportItem().size() < 4) missingTypes.add("SUPPORT");
+//        if (hero.getInventory().getSpecial() == null) missingTypes.add("SPECIAL");
+//        if (hero.getInventory().getArmor() == null) missingTypes.add("ARMOR");
+//        if (hero.getInventory().getHelmet() == null) missingTypes.add("HELMET");
+//        if (hero.getInventory().getListSupportItem().size() < 4) missingTypes.add("SUPPORT");
         return missingTypes;
     }
 
@@ -373,29 +370,27 @@ class SmartBotListener implements Emitter.Listener {
         int halfHeight = explodeRange[0] / 2;
         int halfWidth = explodeRange[1] / 2;
 
-        for (Player enemy : enemies) {
-            int ex = enemy.getX(), ey = enemy.getY();
+        // Duyệt 4 hướng: up, down, left, right
+        String[] directions = {"u", "d", "l", "r"};
+        int[][] deltas = {{0, maxThrow}, {0, -maxThrow}, {-maxThrow, 0}, {maxThrow, 0}};
 
-            // Duyệt tất cả điểm ném hợp lệ
-            for (int dx = -maxThrow; dx <= maxThrow; dx++) {
-                for (int dy = -maxThrow; dy <= maxThrow; dy++) {
-                    int dist = Math.abs(dx) + Math.abs(dy);
-                    // Chỉ ném trên hàng/cột
-                    if (!((dx == 0 || dy == 0) && dist >= minThrow && dist <= maxThrow)) continue;
-                    int tx = px + dx, ty = py + dy;
+        for (int i = 0; i < directions.length; i++) {
+            String dir = directions[i];
+            int dx = deltas[i][0];
+            int dy = deltas[i][1];
+            int tx = px + dx;
+            int ty = py + dy;
 
-                    // Nếu enemy nằm trong vùng nổ centered tại (tx, ty)
-                    if (Math.abs(ex - tx) <= halfWidth && Math.abs(ey - ty) <= halfHeight) {
-                        String dir = getDirectionFromDelta(dx, dy);
-                        if (dir != null) {
-                            hero.throwItem(dir);
-                            System.out.println("💣 Throwing " + throwable.getId() + " to " + dir
-                                    + " (will explode at " + tx + "," + ty + ")"
-                                    + " | Target enemy at " + ex + "," + ey
-                                    + " | ExplodeRange: " + Arrays.toString(explodeRange));
-                            return true;
-                        }
-                    }
+            // Kiểm tra có enemy nào nằm trong vùng nổ centered tại (tx, ty)
+            for (Player enemy : enemies) {
+                int ex = enemy.getX(), ey = enemy.getY();
+                if (Math.abs(ex - tx) <= halfWidth && Math.abs(ey - ty) <= halfHeight) {
+                    hero.throwItem(dir);
+                    System.out.println("💣 Throwing " + throwable.getId() + " to " + dir
+                            + " (will explode at " + tx + "," + ty + ")"
+                            + " | Target enemy at " + ex + "," + ey
+                            + " | ExplodeRange: " + Arrays.toString(explodeRange));
+                    return true;
                 }
             }
         }
